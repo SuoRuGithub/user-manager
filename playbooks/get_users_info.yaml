@@ -1,0 +1,36 @@
+# 得到所有用户信息
+# csv文件格式：
+# hostname,username
+# accuracy,stu1
+---
+- name: get all users info
+  hosts: all  # inventory.yaml中的所有主机
+  become: 'yes'       # root权限运行
+  gather_facts: 'no'  # 不收集主机信息
+  tasks:
+    # 获取所有用户
+    # 获得所有用户（不包括stu0以及没有分配ssh-key的用户）
+    - name: Get users of a host
+      ansible.builtin.shell: 
+        _raw_params: "cut -d: -f1 /etc/passwd | grep -E '^stu[0-9]+$' | grep -v '^stu0$' | xargs -I {} sh -c 'if [ -s /home/{}/.ssh/authorized_keys ]; then echo {}; fi'"
+      register: user_list
+    # for a test
+    - name: echo all users locally
+      ansible.builtin.debug:
+        msg: "hello"
+    # 整理所有主机的user信息
+    - name: Prepare user information
+      set_fact:
+        user_info: "{{ user_info | default([]) + [{'hostname': inventory_hostname, 'username': item}] }}"
+      loop: "{{ user_list.stdout_lines }}"
+    # 保存信息到csv文件
+    - name: save user info to csv file
+      local_action:
+        module: copy
+        content: |
+          hostname,username
+          {% for user in user_info %}
+          {{ user.hostname }},{{ user.username }}
+          {% endfor %}
+        dest: "{{ project_root }}/files/users_info.csv"
+      delegate_to: localhost

@@ -1,0 +1,20 @@
+all:
+  hosts:
+    zzpku:
+      ansible_host: 127.0.0.1
+      ansible_port: 10022
+      ansible_user: zzpku
+      ansible_python_interpreter: /usr/bin/python3
+    # jacobian:
+    #   ansible_host: 166.111.73.132
+    #   ansible_port: 10089
+    #   ansible_python_interpreter: /usr/bin/python3
+    # kernel:
+    #   ansible_host: 166.111.73.132
+    #   ansible_port: 10090
+    #   ansible_python_interpreter: /usr/bin/python3
+
+  vars:
+    ansible_connection: ssh
+    ansible_user: stu0
+    ansible_ssh_private_key_file: /home/zzpku/.ssh/id_rsa

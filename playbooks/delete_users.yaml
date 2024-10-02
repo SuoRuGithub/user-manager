@@ -1,0 +1,25 @@
+---
+- name: delete users
+  hosts: target_host  # inventory.yaml中的主机名
+  become: 'yes'       # root权限运行
+  vars:
+    csv_file: ../files/users_2_delete.csv
+  tasks:
+    - name: read users from csv file
+      community.general.read_csv:
+        path: csv_file
+      user:
+        name: '{{ user_name }}'
+        group: '{{ user_name }}'
+        state: present
+        shell: /bin/bash
+    - name: verify user exists
+      stat:
+
+    - name: delete user
+      file:
+        path: /home/{{ user_name }}/.ssh
+        state: directory
+        owner: '{{ user_name }}'
+        group: '{{ user_name }}'
+        mode: 

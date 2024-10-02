@@ -1,0 +1,18 @@
+- name: create a new user
+  hosts: selected_host  # inventory.yaml中的主机名
+  become: 'yes' # root权限运行
+  tasks:
+    - name: create a new user
+      user:
+        name: '{{ user_name }}'
+        group: '{{ user_name }}'
+        state: present
+        shell: /bin/bash
+
+    - name: create .ssh directory
+      file:
+        path: /home/{{ user_name }}/.ssh
+        state: directory
+        owner: '{{ user_name }}'
+        group: '{{ user_name }}'
+        mode: 

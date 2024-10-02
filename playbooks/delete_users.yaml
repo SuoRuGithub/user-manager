@@ -2,13 +2,14 @@
 # csv文件格式：
 # hostname,username
 # accuracy,stu1
+# ...
 ---
 - name: delete users
-  hosts: target_host  # inventory.yaml中的主机名
+  hosts: all          # inventory.yaml中的主机名
   become: 'yes'       # root权限运行
   gather_facts: 'no'  # 不收集主机信息
   vars:
-    csv_file: ../files/users_2_delete.csv
+    csv_file: "{{ project_root }}/files/users_2_delete.csv"
   tasks:
     # 读取csv文件
     - name: read users from csv file

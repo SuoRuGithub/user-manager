@@ -1,18 +1,63 @@
-- name: create a new user
-  hosts: selected_host  # inventory.yaml中的主机名
-  become: 'yes' # root权限运行
+# 创建新用户
+# 输入csv文件格式：
+# studentname,ssh-key
+# 归档csv文件格式：
+# hostname,username,studentname,ssh-key
+- name: create users
+  hosts: all          # inventory.yaml中的主机名
+  become: 'yes'       # root权限运行
+  gather_facts: 'no'  # 不收集主机信息
+  vars:
+    input_csv_file: "{{ project_root }}/file/users_2_create.csv"
   tasks:
-    - name: create a new user
+    # 合理分配账号
+    - name: assign account
+      register: users_info
+    # 保存分配账号结果到csv文件，归档
+    - name: save assignment to csv file
+      copy:
+        content: |
+          hostname,username,studentname,ssh-key
+          {% for user in users_info %}
+          {{ user.hostname }},{{ user.username }},{{ user.studentname }},{{ user.ssh_key }}
+          {% endfor %}
+        dest: "{{ project_root }}/file/.archive/{{ansible_date_time.iso8601_basic_short}}-add.csv"
+      delegate_to: local_host # 注意是要存到本地的
+    ## 创建账号并且分配ssh-key
+    # 创建账号
+    - name: create users and set ssh-key
       user:
-        name: '{{ user_name }}'
-        group: '{{ user_name }}'
+        name: "{{ item.username }}"
         state: present
-        shell: /bin/bash
-
-    - name: create .ssh directory
+        create_home: yes
+        home: "/home/{{ item.username }}"
+        shell: "/bin/bash"
+      loop: "{{ users_info }}"
+    # 进行一遍检查，避免出现ssh-key已经分配的情况
+    - name: check ssh-key
+      stat:
+        path: "/home/{{ item.username }}/.ssh/authorized_keys"
+        register: key_file
+      loop: "{{ users_info }}"
+    # 如果ssh-key已经分配，停止运行并报错
+    - name: quit if ssh-key has assigned
+      fail:
+        msg: "hostname: {{ item.hostname }}, username: {{ item.username }} has already assigned ssh-key"
+      when:   key_file.results[loop.index0].stat.exists and key_file.results[loop.index0].stat.size > 0
+      loop: "{{ users_info }}"
+    # 设置ssh-key
+    - name: assign ssh-key
+      authorized_key:
+        user: "{{ item.username }}"
+        state: present
+        key: "{{ item.ssh-key }}"
+      loop: "{{ users_info }}"
+    # 最后再将最开始的输入文件删除
+    - name: delete input csv file
       file:
-        path: /home/{{ user_name }}/.ssh
-        state: directory
-        owner: '{{ user_name }}'
-        group: '{{ user_name }}'
-        mode: 
+        path: "{{ project_root }}/file/users_2_create.csv"
+        state: absent
+      delegate_to: localhost
+      run_once: yes
+
+

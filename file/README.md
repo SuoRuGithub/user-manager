@@ -1,9 +1,8 @@
 本目录存放和所有账号信息相关的表格,可能出现的文件包括:
 
 - **users_info.csv**: 所有用户的信息。内容为主机和用户名
-- **users_2_create**: 需要添加的用户。内容为学生姓名与ssh-key
-- **users_2_delete**: 需要删除的用户。内容为主机名和用户名
-- **users_created**: 执行完create_user之后返回的内容,内容为主机名,学生姓名,用户名
+- **users_2_create.csv**: 需要添加的用户。内容为学生姓名与ssh-key
+- **users_2_delete.csv**: 需要删除的用户。内容为主机名和用户名
 - **.archive**: 存放已经执行过命令的表格
 
 ---
